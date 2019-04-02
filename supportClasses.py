@@ -37,28 +37,39 @@ class ISICDataset():
         self.database = pd.read_csv(csv_file)
         self.root_dir = root_dir
         self.size = self.database.shape[0]
-        self.training_size = 128
-        self.test_size = 64
+        self.training_size = 2000
+        self.test_size = 1000
+        self.resize = True
+        self.image_size = [60, 45]
         print('ISICDataset Class Successfully Initiated \n')
     
+    def getTransfrom(self):
+        t = T.Compose([T.Resize(self.image_size), T.ToTensor()])
+        return t
+    
     def loadDataset(self):
-        train_dataset = dset.ImageFolder(root = os.path.join(self.root_dir),
-                                         transform = T.ToTensor())
+        if self.resize:
+            transform = self.getTransfrom()
+        else:
+            transform = T.ToTensor()
+            
+        train_dataset = dset.ImageFolder(root = os.path.join(self.root_dir + 'Train/'),
+                                         transform = transform)
         train_loader = DataLoader(dataset = train_dataset,
-                                  batch_size = 64,
-                                  sampler = sampler.SubsetRandomSampler(range(self.training_size)))
+                                  batch_size = 50,
+                                  sampler = sampler.RandomSampler(train_dataset, replacement = True, num_samples = self.training_size))
         
-        val_dataset = dset.ImageFolder(root = os.path.join(self.root_dir),
-                                       transform = T.ToTensor())
+        val_dataset = dset.ImageFolder(root = os.path.join(self.root_dir + 'Validation/'),
+                                       transform = transform)
         val_loader = DataLoader(dataset = val_dataset,
-                                batch_size = 64,
-                                sampler = sampler.SubsetRandomSampler(range(self.training_size, 2 * self.training_size)))
+                                batch_size = 50,
+                                sampler = sampler.RandomSampler(val_dataset, replacement = True, num_samples = self.test_size))
         
-        test_dataset = dset.ImageFolder(root = os.path.join(self.root_dir),
-                                        transform = T.ToTensor())
+        test_dataset = dset.ImageFolder(root = os.path.join(self.root_dir + 'Test/'),
+                                        transform = transform)
         test_loader = DataLoader(dataset = test_dataset,
-                                 batch_size = 64,
-                                 sampler = sampler.SubsetRandomSampler(range(2 * self.training_size, 3 * self.training_size)))
+                                 batch_size = 50,
+                                 sampler = sampler.RandomSampler(test_dataset, replacement = True, num_samples = self.test_size))
         
         print('Dataset Successfully Loaded \n')
         return train_loader, val_loader, test_loader

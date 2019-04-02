@@ -6,14 +6,6 @@ import torch.nn.functional as F
 import supportFunctions
 import supportClasses
 
-####### Initializations #######
-USE_GPU = True
-dtype = torch.float32
-
-device = supportFunctions.getDevice(USE_GPU)
-
-############################
-
 ####### FUNCTION DEFINITIONS #######
 
 def trainModel(model, optimizer, epochs=1):
@@ -27,10 +19,13 @@ def trainModel(model, optimizer, epochs=1):
             
             scores = model(x)
             loss = F.cross_entropy(scores, y)
+            print('Loss:', loss)
             
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            if (t % 5 == 0):
+                checkAccuracy(val, model)
 
 def checkAccuracy(loader, model):
     num_correct = 0
@@ -52,12 +47,16 @@ def checkAccuracy(loader, model):
 
 
 ####### MAIN CODE #######
+USE_GPU = True
+dtype = torch.float32
+
+device = supportFunctions.getDevice(USE_GPU)
 
 isic_data = supportClasses.ISICDataset(csv_file = 'Data/HAM10000_metadata.csv',
-                        root_dir = 'Data/')
+                        root_dir = 'Data/Images/')
     
     
-isic_data.plotRandomSample()
+#isic_data.plotRandomSample()
 train, val, test = isic_data.loadDataset()
 
 learning_rate = 1e-2
@@ -66,13 +65,13 @@ model = nn.Sequential(
         nn.Conv2d(3, 8, 5, padding = 2),
         nn.ReLU(),
         supportClasses.Flatten(),
-        nn.Linear(8* 450 * 600, 8)
+        nn.Linear(21600, 7)
 )
 
 optimizer = optim.SGD(model.parameters(), lr = learning_rate,
                       momentum = 0.9, nesterov = True)
 
-#trainModel(model, optimizer)
-#checkAccuracy(test, model)
+trainModel(model, optimizer)
+checkAccuracy(test, model)
 
 ############################
