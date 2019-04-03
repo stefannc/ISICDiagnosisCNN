@@ -8,23 +8,25 @@ import supportClasses
 
 ####### FUNCTION DEFINITIONS #######
 
-def trainModel(model, optimizer, epochs=1):
+def trainModel(model, optimizer, data, epochs=1):
     
     model = model.to(device = device)
+    traindata = data
     
     for e in range(0, epochs):
-        for t, (x, y) in enumerate(train):
+        for t, (x, y) in enumerate(traindata):
+            print(type(x))
             x = x.to(device = device, dtype = dtype)
             y = y.to(device = device, dtype = torch.long)
             
             scores = model(x)
             loss = F.cross_entropy(scores, y)
-            print('Loss:', loss)
+            print('Loss:', loss.item())
             
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            if (t % 5 == 0):
+            if (t % 10 == 0):
                 checkAccuracy(val, model)
 
 def checkAccuracy(loader, model):
@@ -59,19 +61,19 @@ isic_data = supportClasses.ISICDataset(csv_file = 'Data/HAM10000_metadata.csv',
 #isic_data.plotRandomSample()
 train, val, test = isic_data.loadDataset()
 
-learning_rate = 1e-2
+learning_rate = 1e-3
 
 model = nn.Sequential(
         nn.Conv2d(3, 8, 5, padding = 2),
         nn.ReLU(),
         supportClasses.Flatten(),
-        nn.Linear(21600, 7)
+        nn.Linear(21600, 200),
+        nn.Linear(200, 7)
 )
 
 optimizer = optim.SGD(model.parameters(), lr = learning_rate,
-                      momentum = 0.9, nesterov = True)
+                      momentum = 0.9, nesterov = False)
 
-trainModel(model, optimizer)
+trainModel(model, optimizer, train, epochs = 5)
 checkAccuracy(test, model)
-
 ############################

@@ -56,20 +56,23 @@ class ISICDataset():
         train_dataset = dset.ImageFolder(root = os.path.join(self.root_dir + 'Train/'),
                                          transform = transform)
         train_loader = DataLoader(dataset = train_dataset,
-                                  batch_size = 50,
-                                  sampler = sampler.RandomSampler(train_dataset, replacement = True, num_samples = self.training_size))
+                                  batch_size = 100,
+                                  #sampler = sampler.SubsetRandomSampler(range(self.training_size)),
+                                  shuffle = True)
         
         val_dataset = dset.ImageFolder(root = os.path.join(self.root_dir + 'Validation/'),
                                        transform = transform)
         val_loader = DataLoader(dataset = val_dataset,
-                                batch_size = 50,
-                                sampler = sampler.RandomSampler(val_dataset, replacement = True, num_samples = self.test_size))
+                                batch_size = 100,
+                                #sampler = sampler.SubsetRandomSampler(range(self.test_size)),
+                                shuffle = True)
         
         test_dataset = dset.ImageFolder(root = os.path.join(self.root_dir + 'Test/'),
                                         transform = transform)
         test_loader = DataLoader(dataset = test_dataset,
-                                 batch_size = 50,
-                                 sampler = sampler.RandomSampler(test_dataset, replacement = True, num_samples = self.test_size))
+                                 batch_size = 100,
+                                 #sampler = sampler.SubsetRandomSampler(range(self.test_size + 1,2*self.test_size)),
+                                 shuffle = True)
         
         print('Dataset Successfully Loaded \n')
         return train_loader, val_loader, test_loader
