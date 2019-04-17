@@ -15,7 +15,7 @@ def initWeights(m):
         torch.nn.init.normal(m.weight)
         m.bias.data.fill_(0.01)
     elif type(m) == nn.Conv2d:
-        torch.nn.init.normal(m.weight)
+        torch.nn.init.xavier_normal(m.weight)
 
 def trainModel(model, optimizer, data, epochs=1):
     
@@ -31,13 +31,11 @@ def trainModel(model, optimizer, data, epochs=1):
             y = y.to(device = device, dtype = torch.long)
             
             scores = model(x)
-            #loss = F.cross_entropy(scores, y, weight = lossWeights)
-            loss = nn.BCELoss()
-            output = loss(scores, y)
-            print('Loss:', output.item())
+            loss = F.cross_entropy(scores, y, weight = lossWeights)
+            print('Loss:', loss.item())
             
             optimizer.zero_grad()
-            output.backward()
+            loss.backward()
             optimizer.step()
             if (t % 10 == 0 and t != 0):
                 checkAccuracy(val, model)
@@ -46,18 +44,23 @@ def checkAccuracy(loader, model):
     num_correct = 0
     num_samples = 0
     model.eval()
+    confusion_matrix = torch.zeros(7, 7)
     with torch.no_grad():
         for x, y in loader:
             x = x.to(device = device, dtype = dtype)
             y = y.to(device = device, dtype = torch.long)
             scores = model(x)
             _, preds = scores.max(1)
-            print(preds)
-            num_correct += (preds == y).sum()
-            num_samples += preds.size(0)
-        acc = float(num_correct) / num_samples
-        print('Got %d / %d correct (%.2f)' % (num_correct, num_samples, 100 * acc))
-        return acc
+            #print(preds)
+            for t, p in zip(y.view(-1), preds.view(-1)):
+                confusion_matrix[t.long(), p.long()] += 1
+            #num_correct += (preds == y).sum()
+            #num_samples += preds.size(0)
+        #acc = float(num_correct) / num_samples
+        #print('Got %d / %d correct (%.2f)' % (num_correct, num_samples, 100 * acc))
+        #return acc
+        print(100 * confusion_matrix.diag()/confusion_matrix.sum(1))
+
     
 ############################
 
@@ -75,7 +78,7 @@ isic_data = supportClasses.ISICDataset(csv_file = 'Data/HAM10000_metadata.csv',
 #isic_data.plotRandomSample()
 train, val, test = isic_data.loadDataset()
 
-learning_rate = 1e-4
+learning_rate = 1e-6
 
 model = nn.Sequential(
         nn.Conv2d(3, 8, 3, padding = 2),
@@ -83,12 +86,13 @@ model = nn.Sequential(
         nn.Conv2d(8, 12, 3, padding = 1),
         supportClasses.Flatten(),
         nn.Linear(34968, 200),
+        nn.ReLU(),
         nn.Linear(200, 7)
 )
 
 model.apply(initWeights)
 optimizer = optim.SGD(model.parameters(), lr = learning_rate,
-                      momentum = 0.9, nesterov = False)
+                      momentum = 0.9, nesterov = True)
 
 trainModel(model, optimizer, train, epochs = 5)
 checkAccuracy(test, model)
