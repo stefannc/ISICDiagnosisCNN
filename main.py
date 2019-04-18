@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+import torchvision
 
 import numpy as np
 
@@ -26,19 +27,20 @@ def trainModel(model, optimizer, data, epochs=1):
     
     for e in range(0, epochs):
         for t, (x, y) in enumerate(traindata):
-            print(type(x))
             x = x.to(device = device, dtype = dtype)
             y = y.to(device = device, dtype = torch.long)
             
             scores = model(x)
             loss = F.cross_entropy(scores, y, weight = lossWeights)
-            print('Loss:', loss.item())
+            
             
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            if (t % 20 == 0 and t != 0):
-                checkAccuracy(val, model)
+            #if (t % 20 == 0 and t != 0):
+        print('Epoch', e, 'has finished')
+        print('Loss:', loss.item())
+        checkAccuracy(val, model)
 
 def checkAccuracy(loader, model):
     num_correct = 0
@@ -81,7 +83,7 @@ isic_data = supportClasses.ISICDataset(csv_file = 'Data/HAM10000_metadata.csv',
 #isic_data.plotRandomSample()
 train, val, test = isic_data.loadDataset()
 
-learning_rate = 1e-6
+learning_rate = 1e-5
 
 model = nn.Sequential(
         nn.Conv2d(3, 8, 3, padding = 2),
@@ -97,11 +99,15 @@ model = nn.Sequential(
         nn.Linear(200, 7)
 )
 
-model.apply(initWeights)
+model = torchvision.models.resnet18(pretrained = True)
+num_ftrs = model.fc.in_features
+model.fc = nn.Linear(num_ftrs, 7)
+
+#model.apply(initWeights)
 optimizer = optim.SGD(model.parameters(), lr = learning_rate,
                       momentum = 0.9, nesterov = True)
 
-trainModel(model, optimizer, train, epochs = 1)
+trainModel(model, optimizer, train, epochs = 5)
 checkAccuracy(test, model)
 print('Do you want to save this model? [y/n] \n')
 ans = input()
