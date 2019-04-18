@@ -10,4 +10,9 @@ def getDevice(USE_GPU): #Returns GPU if CUDA is available, else CPU
     print('Using device:', device)
     
     return device
+
+def saveModel(model):
+    torch.save(model.state_dict(), 'model.pth')
+    return
+    
     

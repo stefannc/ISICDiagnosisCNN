@@ -15,7 +15,7 @@ def initWeights(m):
         torch.nn.init.normal(m.weight)
         m.bias.data.fill_(0.01)
     elif type(m) == nn.Conv2d:
-        torch.nn.init.xavier_normal(m.weight)
+        torch.nn.init.xavier_normal_(m.weight)
 
 def trainModel(model, optimizer, data, epochs=1):
     
@@ -37,7 +37,7 @@ def trainModel(model, optimizer, data, epochs=1):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            if (t % 10 == 0 and t != 0):
+            if (t % 20 == 0 and t != 0):
                 checkAccuracy(val, model)
 
 def checkAccuracy(loader, model):
@@ -59,7 +59,10 @@ def checkAccuracy(loader, model):
         #acc = float(num_correct) / num_samples
         #print('Got %d / %d correct (%.2f)' % (num_correct, num_samples, 100 * acc))
         #return acc
-        print(100 * confusion_matrix.diag()/confusion_matrix.sum(1))
+        accs = 100 * confusion_matrix.diag()/confusion_matrix.sum(1)
+        mean_accs = sum(accs) / 7
+        print(accs)
+        print('Mean:', mean_accs)
 
     
 ############################
@@ -84,8 +87,12 @@ model = nn.Sequential(
         nn.Conv2d(3, 8, 3, padding = 2),
         nn.ReLU(),
         nn.Conv2d(8, 12, 3, padding = 1),
+        nn.AvgPool2d((3,3)),
+        nn.ReLU(),
         supportClasses.Flatten(),
-        nn.Linear(34968, 200),
+        nn.Linear(14400, 1000),
+        nn.ReLU(),
+        nn.Linear(1000, 200),
         nn.ReLU(),
         nn.Linear(200, 7)
 )
@@ -94,6 +101,13 @@ model.apply(initWeights)
 optimizer = optim.SGD(model.parameters(), lr = learning_rate,
                       momentum = 0.9, nesterov = True)
 
-trainModel(model, optimizer, train, epochs = 5)
+trainModel(model, optimizer, train, epochs = 1)
 checkAccuracy(test, model)
+print('Do you want to save this model? [y/n] \n')
+ans = input()
+if ans == 'y':
+    supportFunctions.saveModel(model)
+    print('Model saved succesfully')
+else:
+    print('Model not saved')
 ############################

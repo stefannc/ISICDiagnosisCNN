@@ -37,10 +37,10 @@ class ISICDataset():
         self.database = pd.read_csv(csv_file)
         self.root_dir = root_dir
         self.size = self.database.shape[0]
-        self.training_size = 2000
-        self.test_size = 1000
+        self.training_size = 1000
+        self.test_size = 200
         self.resize = True
-        self.image_size = [60, 45]
+        self.image_size = [120, 90]
         print('ISICDataset Class Successfully Initiated \n')
     
     def getTransfrom(self):
