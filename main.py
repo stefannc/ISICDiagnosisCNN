@@ -3,13 +3,15 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
+import torchvision
+from torch.utils.tensorboard import SummaryWriter
+
 import numpy as np
 
 import supportFunctions
 import supportClasses
 
 ####### FUNCTION DEFINITIONS #######
-
 def initWeights(m):
     if type(m) == nn.Linear:
         torch.nn.init.normal(m.weight)
@@ -18,21 +20,24 @@ def initWeights(m):
         torch.nn.init.xavier_normal_(m.weight)
 
 def trainModel(model, optimizer, data, epochs=1):
-    
     model = model.to(device = device)
     traindata = data
     lossWeights = [1/262, 1/411, 1/880, 1/92, 1/890, 1/5364, 1/114]
     lossWeights = torch.tensor(np.multiply(5364, lossWeights), dtype = dtype).cuda()
     
+    loss_iter = 0
+    
     for e in range(0, epochs):
         for t, (x, y) in enumerate(traindata):
-            print(type(x))
             x = x.to(device = device, dtype = dtype)
             y = y.to(device = device, dtype = torch.long)
             
             scores = model(x)
             loss = F.cross_entropy(scores, y, weight = lossWeights)
-            print('Loss:', loss.item())
+            
+            writer.add_scalar('Loss', loss.item(), loss_iter)
+            writer.close()
+            loss_iter += 1
             
             optimizer.zero_grad()
             loss.backward()
@@ -63,7 +68,6 @@ def checkAccuracy(loader, model):
         mean_accs = sum(accs) / 7
         print(accs)
         print('Mean:', mean_accs)
-
     
 ############################
 
@@ -76,6 +80,8 @@ device = supportFunctions.getDevice(USE_GPU)
 
 isic_data = supportClasses.ISICDataset(csv_file = 'Data/HAM10000_metadata.csv',
                         root_dir = 'Data/Images/')
+
+writer = SummaryWriter()
     
     
 #isic_data.plotRandomSample()
@@ -101,8 +107,16 @@ model.apply(initWeights)
 optimizer = optim.SGD(model.parameters(), lr = learning_rate,
                       momentum = 0.9, nesterov = True)
 
+#TENSORBOARD CODE
+images, labels = next(iter(train))
+grid = torchvision.utils.make_grid(images)
+writer.add_image('images', grid, 0)
+writer.add_graph(model, images)
+writer.close()
+
 trainModel(model, optimizer, train, epochs = 1)
 checkAccuracy(test, model)
+
 print('Do you want to save this model? [y/n] \n')
 ans = input()
 if ans == 'y':
