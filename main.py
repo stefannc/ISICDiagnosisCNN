@@ -4,7 +4,6 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torchvision
 
-import torchvision
 from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
@@ -44,13 +43,13 @@ def trainModel(model, optimizer, data, epochs=1):
             loss.backward()
             optimizer.step()
             #if (t % 20 == 0 and t != 0):
-        print('Epoch', e, 'has finished')
+        print('Epoch', e + 1, 'has finished')
         print('Loss:', loss.item())
         checkAccuracy(val, model)
 
 def checkAccuracy(loader, model):
-    num_correct = 0
-    num_samples = 0
+    #num_correct = 0
+    #num_samples = 0
     model.eval()
     confusion_matrix = torch.zeros(7, 7)
     with torch.no_grad():
@@ -71,6 +70,25 @@ def checkAccuracy(loader, model):
         mean_accs = sum(accs) / 7
         print(accs)
         print('Mean:', mean_accs)
+        
+        spec = []
+        sens = []
+        TP = confusion_matrix.diag()
+        for c in range(7):
+            idx = torch.ones(7).byte()
+            idx[c] = 0
+            TN = confusion_matrix[idx.nonzero()[:, None], idx.nonzero()].sum()
+            FP = confusion_matrix[idx, c].sum()
+            FN = confusion_matrix[c, idx].sum()
+            spec.append(TN / (TN + FP))
+            sens.append(TP[c] / (TP[c] + FN))
+        mean_spec = sum(spec) / 7
+        mean_sens = sum(sens) / 7
+        writer.add_scalar('Mean Accuracy', mean_accs)
+        writer.add_scalar('Mean Sensitivity', mean_sens)
+        writer.add_scalar('Mean Specificity', mean_spec)
+        writer.close()
+            
     
 ############################
 
@@ -90,7 +108,7 @@ writer = SummaryWriter()
 #isic_data.plotRandomSample()
 train, val, test = isic_data.loadDataset()
 
-learning_rate = 1e-5
+learning_rate = 1e-4
 
 model = nn.Sequential(
         nn.Conv2d(3, 8, 3, padding = 2),
@@ -106,7 +124,7 @@ model = nn.Sequential(
         nn.Linear(200, 7)
 )
 
-model = torchvision.models.resnet18(pretrained = True)
+model = torchvision.models.resnet34(pretrained = True)
 num_ftrs = model.fc.in_features
 model.fc = nn.Linear(num_ftrs, 7)
 

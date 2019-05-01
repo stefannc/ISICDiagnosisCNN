@@ -40,7 +40,7 @@ class ISICDataset():
         self.training_size = 1000
         self.test_size = 200
         self.resize = True
-        self.image_size = [60, 45]
+        self.image_size = [120, 90]
         print('ISICDataset Class Successfully Initiated \n')
     
     def getTransfrom(self):
