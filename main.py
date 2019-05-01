@@ -121,6 +121,7 @@ writer.add_image('images', grid, 0)
 writer.add_graph(model, images)
 writer.close()
 
+trainModel(model, optimizer, train, epochs = 5)
 checkAccuracy(test, model)
 
 print('Do you want to save this model? [y/n] \n')
