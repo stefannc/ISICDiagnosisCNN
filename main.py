@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+import torchvision
 
 import torchvision
 from torch.utils.tensorboard import SummaryWriter
@@ -38,12 +39,14 @@ def trainModel(model, optimizer, data, epochs=1):
             writer.add_scalar('Loss', loss.item(), loss_iter)
             writer.close()
             loss_iter += 1
-            
+
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            if (t % 20 == 0 and t != 0):
-                checkAccuracy(val, model)
+            #if (t % 20 == 0 and t != 0):
+        print('Epoch', e, 'has finished')
+        print('Loss:', loss.item())
+        checkAccuracy(val, model)
 
 def checkAccuracy(loader, model):
     num_correct = 0
@@ -87,7 +90,7 @@ writer = SummaryWriter()
 #isic_data.plotRandomSample()
 train, val, test = isic_data.loadDataset()
 
-learning_rate = 1e-6
+learning_rate = 1e-5
 
 model = nn.Sequential(
         nn.Conv2d(3, 8, 3, padding = 2),
@@ -103,7 +106,11 @@ model = nn.Sequential(
         nn.Linear(200, 7)
 )
 
-model.apply(initWeights)
+model = torchvision.models.resnet18(pretrained = True)
+num_ftrs = model.fc.in_features
+model.fc = nn.Linear(num_ftrs, 7)
+
+#model.apply(initWeights)
 optimizer = optim.SGD(model.parameters(), lr = learning_rate,
                       momentum = 0.9, nesterov = True)
 
@@ -114,7 +121,6 @@ writer.add_image('images', grid, 0)
 writer.add_graph(model, images)
 writer.close()
 
-trainModel(model, optimizer, train, epochs = 1)
 checkAccuracy(test, model)
 
 print('Do you want to save this model? [y/n] \n')
