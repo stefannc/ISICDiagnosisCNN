@@ -80,6 +80,7 @@ class ISICDataset():
     
     def plotRandomSample(self):
         #Plots random image from the database with the corresponding diagnosis
+        #CURRENTLY UNUSED AND NOT FUNCTIONING
         sample = int(10000 * np.random.rand())
         img_name = self.database.image_id[sample]
         dir_name = self.root_dir + '/Images/' + img_name + '.jpg'
