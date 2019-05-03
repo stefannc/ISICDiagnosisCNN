@@ -74,32 +74,21 @@ def checkPerformance(loader, model, epoch):
             for t, p in zip(y.view(-1), preds.view(-1)):
                 confusion_matrix[t.long(), p.long()] += 1
         
-        #Calculating accuracy        
-        accs = 100 * confusion_matrix.diag()/confusion_matrix.sum(1)
-        mean_accs = sum(accs) / 7
-        print(accs)
-        print('Mean:', mean_accs)
-        
         #Calculating other statistics
-        spec = []
-        sens = []
         TP = confusion_matrix.diag()
+        TN = []
+        FP = []
+        FN = []
         for c in range(7):
             idx = torch.ones(7).byte()
             idx[c] = 0
-            TN = confusion_matrix[idx.nonzero()[:, None], idx.nonzero()].sum()
-            FP = confusion_matrix[idx, c].sum()
-            FN = confusion_matrix[c, idx].sum()
-            spec.append(TN / (TN + FP))
-            sens.append(TP[c] / (TP[c] + FN))
-        mean_spec = sum(spec) / 7
-        mean_sens = sum(sens) / 7
+            TN.append(confusion_matrix[idx.nonzero()[:, None], idx.nonzero()].sum())
+            FP.append(confusion_matrix[idx, c].sum())
+            FN.append(confusion_matrix[c, idx].sum())
         
-        #Writing to tensorboard
-        writer.add_scalar('Mean Accuracy', mean_accs, epoch)
-        writer.add_scalar('Mean Sensitivity', mean_sens, epoch)
-        writer.add_scalar('Mean Specificity', mean_spec, epoch)
-        writer.close()
+        printing = True
+        tboard = True
+        supportFunctions.performance(TP, TN, FP, FN, printing, tboard, epoch = epoch, writer = writer)
 ############################
         
 ####### MAIN CODE #######
@@ -132,20 +121,22 @@ model = nn.Sequential(
 
 #Model and parameter inits
 learning_rate = 1e-4
-epochs = 5
-model = torchvision.models.resnet34(pretrained = True)
+epochs = 10
+model = torchvision.models.resnet50(pretrained = True)
 num_ftrs = model.fc.in_features
 model.fc = nn.Linear(num_ftrs, 7)
-optimizer = optim.Adagrad(model.parameters(), lr = learning_rate)
+#optimizer = optim.Adagrad(model.parameters(), lr = learning_rate)
 start_epoch = 1
 
 #model.apply(initWeights)
-#optimizer = optim.SGD(model.parameters(), lr = learning_rate,
-#                      momentum = 0.9, nesterov = True)
+optimizer = optim.SGD(model.parameters(), lr = learning_rate,
+                      momentum = 0.9, weight_decay = 0,
+                      nesterov = True)
 
-load_model = 'checkpoint.pth'
+
+load_model = ''
 if load_model == '':
-    print('No pretrained loaded model found. Using default model (Resnet34)')
+    print('No pretrained loaded model found. Using default model (Resnet50)')
 else:
     model, optimizer, start_epoch = supportFunctions.loadModel(model, optimizer, load_model)
     
@@ -163,7 +154,7 @@ writer.add_image('images', grid, 0)
 writer.close()
 
 #Function calls
-trainModel(model, optimizer, train, epochs = epochs, start_epoch)
+trainModel(model, optimizer, train, epochs = epochs, start_epoch = start_epoch)
 checkPerformance(test, model, epochs + start_epoch)
 
 #Saving

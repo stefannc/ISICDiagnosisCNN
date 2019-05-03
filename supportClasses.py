@@ -40,8 +40,8 @@ class ISICDataset():
         self.training_size = 1000
         self.test_size = 200
         self.resize = True
-        self.image_size = [120, 90]
-        print('ISICDataset Class Successfully Initiated \n')
+        self.image_size = [120, 90] #original [600x450]
+        print('ISICDataset Class Successfully Initiated')
     
     def getTransfrom(self):
         t = T.Compose([T.Resize(self.image_size), T.ToTensor()])
@@ -56,7 +56,7 @@ class ISICDataset():
         train_dataset = dset.ImageFolder(root = os.path.join(self.root_dir + 'Train/'),
                                          transform = transform)
         train_loader = DataLoader(dataset = train_dataset,
-                                  batch_size = 100,
+                                  batch_size = 20,
                                   #sampler = sampler.SubsetRandomSampler(range(self.training_size)),
                                   shuffle = True)
         
@@ -74,7 +74,7 @@ class ISICDataset():
                                  #sampler = sampler.SubsetRandomSampler(range(self.test_size + 1,2*self.test_size)),
                                  shuffle = True)
         
-        print('Dataset Successfully Loaded \n')
+        print('Dataset Successfully Loaded')
         return train_loader, val_loader, test_loader
 
     
