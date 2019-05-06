@@ -16,7 +16,7 @@ device = supportFunctions.getDevice(USE_GPU)
 
 model_filename = 'checkpoint.pth'
 
-model = torchvision.models.resnet101(pretrained = True)
+model = torchvision.models.resnet50(pretrained = True)
 num_ftrs = model.fc.in_features
 model.fc = nn.Linear(num_ftrs, 7)
 
@@ -28,6 +28,13 @@ isic_data = supportClasses.ISICDataset(csv_file = 'Data/HAM10000_metadata.csv',
                         root_dir = 'Data/Images/')
 train, val, test = isic_data.loadDataset()
 
+print('Do you want to create an output .csv file? [y/n]')
+ans = input()
+if ans == 'y':
+    CREATE_CSV = True
+else:
+    CREATE_CSV = False
+    
 confusion_matrix = torch.zeros(7, 7)
 with torch.no_grad():
     for x, y in test:

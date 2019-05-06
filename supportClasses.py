@@ -40,12 +40,46 @@ class ISICDataset():
         self.training_size = 1000
         self.test_size = 200
         self.resize = True
+        self.normalize = False #Edit this variable in function loadDataset()
         self.image_size = [120, 90] #original [600x450]
+        self.mu = [0.779659, 0.54361504, 0.56447685]
+        self.sigma = [0.08348679, 0.11146858, 0.12505478]
         print('ISICDataset Class Successfully Initiated')
     
-    def getTransfrom(self):
-        t = T.Compose([T.Resize(self.image_size), T.ToTensor()])
+    def getTransfrom(self, mu = [], sigma = []):
+        if self.normalize:
+            t = T.Compose([T.Resize(self.image_size), T.ToTensor(),
+                           T.Normalize((mu[0], mu[1], mu[2]),(sigma[0], sigma[1], sigma[2]))])
+        else:
+            t = T.Compose([T.Resize(self.image_size), T.ToTensor()])
         return t
+    
+    def getStatistics(self, data):
+        muR = []
+        muG = []
+        muB = []
+        stdR = []
+        stdG = []
+        stdB = []
+        
+        for n in range(len(data)):
+            print(100 * (n/len(data)), '%')
+            for channel in range(0, 3):
+                mu = data[n][0][channel].mean()
+                sigma = data[n][0][channel].std()
+                if channel == 0:
+                    muR.append(mu)
+                    stdR.append(sigma)
+                elif channel == 1:
+                    muG.append(mu)
+                    stdG.append(sigma)
+                elif channel == 2:
+                    muB.append(mu)
+                    stdB.append(sigma)
+                    
+        means = [np.mean(muR), np.mean(muG), np.mean(muB)]
+        stds = [np.mean(stdR), np.mean(stdG), np.mean(stdB)]
+        return means, stds
     
     def loadDataset(self):
         if self.resize:
@@ -55,6 +89,20 @@ class ISICDataset():
             
         train_dataset = dset.ImageFolder(root = os.path.join(self.root_dir + 'Train/'),
                                          transform = transform)
+        
+        self.normalize = True #Edit variable here
+        if self.normalize:
+            #m, s = self.getStatistics(train_dataset)
+            m = self.mu
+            s = self.sigma
+            if self.resize and self.normalize:
+                transform = self.getTransfrom(mu = m, sigma = s)
+            else:
+                print('[Warning] To use normalization, resizing must be enabled. Normalization will not be not used for this run.')
+                
+        train_dataset = dset.ImageFolder(root = os.path.join(self.root_dir + 'Train/'),
+                                 transform = transform)
+        
         train_loader = DataLoader(dataset = train_dataset,
                                   batch_size = 20,
                                   #sampler = sampler.SubsetRandomSampler(range(self.training_size)),
@@ -72,7 +120,7 @@ class ISICDataset():
         test_loader = DataLoader(dataset = test_dataset,
                                  batch_size = 100,
                                  #sampler = sampler.SubsetRandomSampler(range(self.test_size + 1,2*self.test_size)),
-                                 shuffle = True)
+                                 shuffle = False)
         
         print('Dataset Successfully Loaded')
         return train_loader, val_loader, test_loader

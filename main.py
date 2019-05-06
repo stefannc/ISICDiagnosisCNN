@@ -105,6 +105,7 @@ isic_data = supportClasses.ISICDataset(csv_file = 'Data/HAM10000_metadata.csv',
 train, val, test = isic_data.loadDataset()
 
 #Unused manual model
+"""
 model = nn.Sequential(
         nn.Conv2d(3, 8, 3, padding = 2),
         nn.ReLU(),
@@ -118,13 +119,17 @@ model = nn.Sequential(
         nn.ReLU(),
         nn.Linear(200, 7)
 )
+"""
 
 #Model and parameter inits
 learning_rate = 1e-4
-epochs = 10
+epochs = 5
 model = torchvision.models.resnet50(pretrained = True)
 num_ftrs = model.fc.in_features
 model.fc = nn.Linear(num_ftrs, 7)
+#model = nn.Sequential(nn.ReLU(), nn.Linear(256, 7))
+#model.apply(initWeights)
+#model = nn.Sequential(resnet, model)
 #optimizer = optim.Adagrad(model.parameters(), lr = learning_rate)
 start_epoch = 1
 
