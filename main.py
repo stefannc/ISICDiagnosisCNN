@@ -122,9 +122,9 @@ model = nn.Sequential(
 """
 
 #Model and parameter inits
-learning_rate = 1e-4
-epochs = 5
-model = torchvision.models.resnet50(pretrained = True)
+learning_rate = 5e-5
+epochs = 2
+model = torchvision.models.resnet101(pretrained = True)
 num_ftrs = model.fc.in_features
 model.fc = nn.Linear(num_ftrs, 7)
 #model = nn.Sequential(nn.ReLU(), nn.Linear(256, 7))
@@ -139,7 +139,7 @@ optimizer = optim.SGD(model.parameters(), lr = learning_rate,
                       nesterov = True)
 
 
-load_model = ''
+load_model = 'checkpoint.pth'
 if load_model == '':
     print('No pretrained loaded model found. Using default model (Resnet50)')
 else:
