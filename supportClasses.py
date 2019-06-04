@@ -47,6 +47,9 @@ class ISICDataset():
         print('ISICDataset Class Successfully Initiated')
     
     def getTransfrom(self, mu = [], sigma = []):
+        """
+        Creates the transform tuple
+        """
         if self.normalize:
             t = T.Compose([T.Resize(self.image_size), T.ToTensor(),
                            T.Normalize((mu[0], mu[1], mu[2]),(sigma[0], sigma[1], sigma[2]))])
@@ -55,6 +58,9 @@ class ISICDataset():
         return t
     
     def getStatistics(self, data):
+        """
+        Calculates statistics of the dataset (mean and standard deviation per channel)
+        """
         muR = []
         muG = []
         muB = []
@@ -82,6 +88,9 @@ class ISICDataset():
         return means, stds
     
     def loadDataset(self):
+        """
+        Loads the dataset
+        """
         if self.resize:
             transform = self.getTransfrom()
         else:
@@ -92,7 +101,7 @@ class ISICDataset():
         
         self.normalize = True #Edit variable here
         if self.normalize:
-            #m, s = self.getStatistics(train_dataset)
+            #m, s = self.getStatistics(train_dataset) #Uncomment to calculate stats; takes a long time!
             m = self.mu
             s = self.sigma
             if self.resize and self.normalize:
@@ -127,8 +136,10 @@ class ISICDataset():
 
     
     def plotRandomSample(self):
-        #Plots random image from the database with the corresponding diagnosis
-        #CURRENTLY UNUSED AND NOT FUNCTIONING
+        """
+        Plots random image from the database with the corresponding diagnosis
+        CURRENTLY UNUSED AND NOT FUNCTIONING
+        """
         sample = int(10000 * np.random.rand())
         img_name = self.database.image_id[sample]
         dir_name = self.root_dir + '/Images/' + img_name + '.jpg'

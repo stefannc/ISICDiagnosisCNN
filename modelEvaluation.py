@@ -30,16 +30,19 @@ isic_data = supportClasses.ISICDataset(csv_file = 'Data/HAM10000_metadata.csv',
 train, val, test = isic_data.loadDataset()
 
 print('Do you want to create an output .csv file? [y/n]')
-ans = 'y'# input()
+ans = input()
 if ans == 'y':
     CREATE_CSV = True
+    print('A .csv file will be created')
 else:
     CREATE_CSV = False
+    print('A .csv file will NOT be created')
     
 n = 0    
 output = torch.zeros(1000, 7)
 confusion_matrix = torch.zeros(7, 7)
 with torch.no_grad():
+    #Running model, creating confmat
     for x, y in val:
         x = x.to(device = device, dtype = dtype)
         y = y.to(device = device, dtype = torch.long)
@@ -49,10 +52,13 @@ with torch.no_grad():
         _, preds = scores.max(1)
         for t, p in zip(y.view(-1), preds.view(-1)):
             confusion_matrix[t.long(), p.long()] += 1
+    
+    #Creation of output CSV-file
     if CREATE_CSV:
         a = torch.std(output)
         output = supportFunctions.sigmoidConversion(output, a = 1/a, threshold = 0.5)    
         imgnames = []
+        
         for i in range(0, 1000):
             name = val.dataset.imgs[i]
             name = name[0]

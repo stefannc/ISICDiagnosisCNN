@@ -1,8 +1,10 @@
 import torch
 import numpy as np
 
-def getDevice(USE_GPU): #Returns GPU if CUDA is available, else CPU
-    
+def getDevice(USE_GPU): 
+    """
+    Returns GPU if CUDA is available, else CPU
+    """
     if USE_GPU and torch.cuda.is_available():
         device = torch.device('cuda')
     else:
@@ -13,16 +15,25 @@ def getDevice(USE_GPU): #Returns GPU if CUDA is available, else CPU
     return device
 
 def sigmoidConversion(x, a = 1, threshold = 0.5):
+    """
+    Sigmoid conversion for arbitrary score scale to [0, 1]
+    """
     x = x.cpu()
     return (1/(1 + np.exp(-1 * a * (x - threshold))))
 
 def saveModel(model, optimizer, epochs):
+    """
+    Saves the model to a file
+    """
     state = {'epoch': epochs + 1, 'state_dict': model.state_dict(),
              'optimizer': optimizer.state_dict()}
     torch.save(state, 'checkpoint.pth')
     return
 
 def loadModel(model, optimizer = None, filename = None):
+    """
+    Loads a model from a file
+    """
     if not filename == None:
         print('Loading checkpoint from', filename)
         checkpoint = torch.load(filename)
@@ -35,6 +46,9 @@ def loadModel(model, optimizer = None, filename = None):
     return model, optimizer, start_epoch
 
 def performance(TP, TN, FP, FN, printing, tboard, epoch = 0, writer = None):
+    """
+    Checks performance with a variety of statistics
+    """
     class_names = ['melanoma', 'nevus', 'carcinoma', 'bowens', 'keratosis', 'dermatofibroma', 'vascular']
     accuracy = []
     sensitivity = []
