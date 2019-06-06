@@ -5,7 +5,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torchvision
 
-from torch.utils.tensorboard import SummaryWriter
+#from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
 
@@ -87,8 +87,8 @@ def checkPerformance(loader, model, epoch):
             FN.append(confusion_matrix[c, idx].sum())
         
         printing = True
-        tboard = True
-        supportFunctions.performance(TP, TN, FP, FN, printing, tboard, epoch = epoch, writer = writer)
+        tboard = False
+        supportFunctions.performance(TP, TN, FP, FN, printing, tboard, epoch = epoch)
 ############################
         
 ####### MAIN CODE #######
@@ -98,7 +98,7 @@ USE_GPU = True
 dtype = torch.float32
 
 device = supportFunctions.getDevice(USE_GPU)
-writer = SummaryWriter()
+#writer = SummaryWriter()
 
 isic_data = supportClasses.ISICDataset(csv_file = 'Data/HAM10000_metadata.csv',
                         root_dir = 'Data/Images/')
@@ -153,10 +153,10 @@ if (USE_GPU):
                 state[k] = v.to(device)
 
 #Tensorboard
-images, labels = next(iter(train))
-grid = torchvision.utils.make_grid(images)
-writer.add_image('images', grid, 0)
-writer.close()
+#images, labels = next(iter(train))
+#grid = torchvision.utils.make_grid(images)
+#writer.add_image('images', grid, 0)
+#writer.close()
 
 #Function calls
 trainModel(model, optimizer, train, epochs = epochs, start_epoch = start_epoch)

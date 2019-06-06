@@ -84,10 +84,12 @@ def performance(TP, TN, FP, FN, printing, tboard, epoch = 0, writer = None):
         print('Mean Precision:', m_pre)
         print('Mean F1-Score:', m_f1)
         print('########################################################')
+    """
     if tboard:
         writer.add_scalar('Accuracy', m_acc, epoch)
         writer.add_scalar('Recall', m_rec, epoch)
         writer.add_scalar('Precision', m_pre, epoch)
         writer.add_scalar('F1-Score', m_f1, epoch)
         writer.close()
+    """
 
