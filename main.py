@@ -44,8 +44,8 @@ def trainModel(model, optimizer, data, epochs=1, start_epoch=1):
             scores = model(x)
             loss = F.cross_entropy(scores, y, weight = lossWeights)
             
-            writer.add_scalar('Cros-Entropy Loss', loss.item(), loss_iter)
-            writer.close()
+            #writer.add_scalar('Cros-Entropy Loss', loss.item(), loss_iter)
+            #writer.close()
             loss_iter += 1
 
             optimizer.zero_grad()
