@@ -5,7 +5,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torchvision
 
-#from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
 
@@ -44,8 +44,8 @@ def trainModel(model, optimizer, data, epochs=1, start_epoch=1):
             scores = model(x)
             loss = F.cross_entropy(scores, y, weight = lossWeights)
             
-            #writer.add_scalar('Cros-Entropy Loss', loss.item(), loss_iter)
-            #writer.close()
+            writer.add_scalar('Cross-Entropy Loss', loss.item(), loss_iter)
+            writer.close()
             loss_iter += 1
 
             optimizer.zero_grad()
@@ -87,8 +87,8 @@ def checkPerformance(loader, model, epoch):
             FN.append(confusion_matrix[c, idx].sum())
         
         printing = True
-        tboard = False
-        supportFunctions.performance(TP, TN, FP, FN, printing, tboard, epoch = epoch)
+        tboard = True
+        supportFunctions.performance(TP, TN, FP, FN, printing, tboard, epoch = epoch, writer = writer)
 ############################
         
 ####### MAIN CODE #######
@@ -98,7 +98,7 @@ USE_GPU = True
 dtype = torch.float32
 
 device = supportFunctions.getDevice(USE_GPU)
-#writer = SummaryWriter()
+writer = SummaryWriter()
 
 isic_data = supportClasses.ISICDataset(csv_file = 'Data/HAM10000_metadata.csv',
                         root_dir = 'Data/Images/')
@@ -123,7 +123,7 @@ model = nn.Sequential(
 
 #Model and parameter inits
 learning_rate = 5e-5
-epochs = 10
+epochs = 1
 model = torchvision.models.resnet101(pretrained = True)
 num_ftrs = model.fc.in_features
 model.fc = nn.Linear(num_ftrs, 7)
@@ -153,10 +153,10 @@ if (USE_GPU):
                 state[k] = v.to(device)
 
 #Tensorboard
-#images, labels = next(iter(train))
-#grid = torchvision.utils.make_grid(images)
-#writer.add_image('images', grid, 0)
-#writer.close()
+images, labels = next(iter(train))
+grid = torchvision.utils.make_grid(images)
+writer.add_image('images', grid, 0)
+writer.close()
 
 #Function calls
 trainModel(model, optimizer, train, epochs = epochs, start_epoch = start_epoch)
