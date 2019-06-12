@@ -13,6 +13,12 @@ import supportFunctions
 import supportClasses
 ############################
 
+####### GLOBAL VARIABLES #######
+loss_iter = 0
+USE_GPU = True
+dtype = torch.float32
+############################
+
 ####### MAIN FUNCTIONS DEFINITIONS #######
 def initWeights(m):
     """
@@ -35,7 +41,7 @@ def trainModel(model, optimizer, data, epochs=1, start_epoch=1):
     lossWeights = torch.tensor(np.multiply(5364, lossWeights), dtype = dtype).cuda()
     
     #Training loop
-    loss_iter = 0
+    global loss_iter
     for e in range(0, epochs):
         for t, (x, y) in enumerate(traindata):
             x = x.to(device = device, dtype = dtype)
@@ -94,9 +100,6 @@ def checkPerformance(loader, model, epoch):
 ####### MAIN CODE #######
         
 #Inits
-USE_GPU = True
-dtype = torch.float32
-
 device = supportFunctions.getDevice(USE_GPU)
 writer = SummaryWriter()
 
@@ -104,40 +107,33 @@ isic_data = supportClasses.ISICDataset(csv_file = 'Data/HAM10000_metadata.csv',
                         root_dir = 'Data/Images/')
 train, val, test = isic_data.loadDataset()
 
-#Unused manual model
-"""
-model = nn.Sequential(
-        nn.Conv2d(3, 8, 3, padding = 2),
-        nn.ReLU(),
-        nn.Conv2d(8, 12, 3, padding = 1),
-        nn.AvgPool2d((3,3)),
-        nn.ReLU(),
-        supportClasses.Flatten(),
-        nn.Linear(14400, 1000),
-        nn.ReLU(),
-        nn.Linear(1000, 200),
-        nn.ReLU(),
-        nn.Linear(200, 7)
-)
-"""
-
 #Model and parameter inits
-learning_rate = 5e-5
-epochs = 1
-model = torchvision.models.resnet101(pretrained = True)
+learning_rate = 1e-3
+epochs = 10
+model = torchvision.models.resnet50(pretrained = True)
+for param in model.parameters():
+    param.requires_grad = True
+"""
+model.fc = nn.Sequential(
+        nn.Linear(num_ftrs, 1024),
+        nn.BatchNorm1d(1024),
+        nn.Dropout(0.5),
+        nn.Linear(1024, 128),
+        nn.BatchNorm1d(128),
+        nn.Dropout(0.5),
+        nn.Linear(128, 7),
+        nn.ReLU())
+"""
 num_ftrs = model.fc.in_features
 model.fc = nn.Linear(num_ftrs, 7)
-#model = nn.Sequential(nn.ReLU(), nn.Linear(256, 7))
-#model.apply(initWeights)
-#model = nn.Sequential(resnet, model)
-#optimizer = optim.Adagrad(model.parameters(), lr = learning_rate)
 start_epoch = 1
 
-#model.apply(initWeights)
-optimizer = optim.SGD(model.parameters(), lr = learning_rate,
-                      momentum = 0.9, weight_decay = 0,
+"""
+optimizer = optim.SGD(model.fc.parameters(), lr = learning_rate,
+                      momentum = 0.9, weight_decay = 0.01,
                       nesterov = True)
-
+"""
+optimizer = optim.Adam(model.parameters(), lr = learning_rate, amsgrad = True)
 
 load_model = ''
 if load_model == '':
@@ -159,8 +155,27 @@ writer.add_image('images', grid, 0)
 writer.close()
 
 #Function calls
-trainModel(model, optimizer, train, epochs = epochs, start_epoch = start_epoch)
-checkPerformance(test, model, epochs + start_epoch)
+continueTraining = True
+iteration = 1
+while continueTraining:
+    trainModel(model, optimizer, train, epochs = epochs, start_epoch = start_epoch)
+    checkPerformance(test, model, epochs + start_epoch)
+    
+    print(iteration * epochs, 'have ran. Do you want to run another', epochs, 'epochs? [y/n]')
+    ans = input()
+    if ans == 'n':
+        continueTraining = False
+    else:
+        iteration += 1
+        optimizer = optim.Adam(model.parameters(), lr = learning_rate/iteration, amsgrad = True)
+        print('Learning rate has been updated from', learning_rate/(iteration-1), 'to', learning_rate/iteration)
+        print('Do you want to quicksave the model? [y/n]')
+        ans = input()
+        if ans == 'y':
+            supportFunctions.saveModel(model, optimizer, epochs)
+            print('Model quicksaved succesfully. Returning to training.')
+        else:
+            print('Model will not be quicksaved. Returning to training.')
 
 #Saving
 print('Do you want to save this model? [y/n] \n')

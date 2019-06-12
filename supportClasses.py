@@ -41,7 +41,7 @@ class ISICDataset():
         self.test_size = 200
         self.resize = True
         self.normalize = False #Edit this variable in function loadDataset()
-        self.image_size = [120, 90] #original [600x450]
+        self.image_size = [224, 224] #original [600x450]
         self.mu = [0.779659, 0.54361504, 0.56447685]
         self.sigma = [0.08348679, 0.11146858, 0.12505478]
         print('ISICDataset Class Successfully Initiated')
@@ -99,7 +99,7 @@ class ISICDataset():
         train_dataset = dset.ImageFolder(root = os.path.join(self.root_dir + 'Train/'),
                                          transform = transform)
         
-        self.normalize = True #Edit variable here
+        self.normalize = False #Edit variable here
         if self.normalize:
             #m, s = self.getStatistics(train_dataset) #Uncomment to calculate stats; takes a long time!
             m = self.mu
