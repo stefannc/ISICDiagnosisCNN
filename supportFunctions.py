@@ -45,7 +45,7 @@ def loadModel(model, optimizer = None, filename = None):
     
     return model, optimizer, start_epoch
 
-def performance(TP, TN, FP, FN, printing, tboard, epoch = 0, writer = None):
+def performance(TP, TN, FP, FN, loss, printing, tboard, train, epoch = 0, writer = None):
     """
     Checks performance with a variety of statistics
     """
@@ -88,6 +88,11 @@ def performance(TP, TN, FP, FN, printing, tboard, epoch = 0, writer = None):
         writer.add_scalar('Accuracy', m_acc, epoch)
         writer.add_scalar('Recall', m_rec, epoch)
         writer.add_scalar('Precision', m_pre, epoch)
-        writer.add_scalar('F1-Score', m_f1, epoch)
+        if train:
+            writer.add_scalar('F1-Score TRAIN', m_f1, epoch)
+            writer.add_scalar('Loss TRAIN', loss, epoch)
+        if not train:
+            writer.add_scalar('F1-Score VALID', m_f1, epoch)
+            writer.add_scalar('Loss VALID', loss, epoch)
         writer.close()
 

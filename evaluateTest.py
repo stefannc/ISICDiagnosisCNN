@@ -17,7 +17,7 @@ device = supportFunctions.getDevice(USE_GPU)
 
 model_filename = 'checkpoint.pth'
 
-model = torchvision.models.resnet50(pretrained = True) #Edit model to match the loaded model!
+model = torchvision.models.resnet34(pretrained = True) #Edit model to match the loaded model!
 num_ftrs = model.fc.in_features
 model.fc = nn.Linear(num_ftrs, 7)
 

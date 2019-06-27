@@ -17,6 +17,8 @@ import supportClasses
 loss_iter = 0
 USE_GPU = True
 dtype = torch.float32
+lossWeights = [1/262, 1/411, 1/880, 1/92, 1/890, 1/5364, 1/114]
+lossWeights = torch.tensor(np.multiply(5364, lossWeights), dtype = dtype).cuda()
 ############################
 
 ####### MAIN FUNCTIONS DEFINITIONS #######
@@ -37,8 +39,7 @@ def trainModel(model, optimizer, data, epochs=1, start_epoch=1):
     #Inits
     model = model.to(device = device)
     traindata = data
-    lossWeights = [1/262, 1/411, 1/880, 1/92, 1/890, 1/5364, 1/114]
-    lossWeights = torch.tensor(np.multiply(5364, lossWeights), dtype = dtype).cuda()
+    global lossWeights
     
     #Training loop
     global loss_iter
@@ -60,9 +61,10 @@ def trainModel(model, optimizer, data, epochs=1, start_epoch=1):
             
         print('Epoch', e + 1, 'has finished')
         print('Loss:', loss.item())
-        checkPerformance(val, model, e + start_epoch)
+        checkPerformance(train, model, e + start_epoch, True)
+        checkPerformance(val, model, e + start_epoch, False)
 
-def checkPerformance(loader, model, epoch):
+def checkPerformance(loader, model, epoch, train_bool):
     """
     Checks performance of the model. Sends the data to tensorboard.
     Use "tensorboard --logdir=runs" in this folder to start the board. 
@@ -72,10 +74,13 @@ def checkPerformance(loader, model, epoch):
     model.eval()
     confusion_matrix = torch.zeros(7, 7)
     with torch.no_grad():
+        loss = 0
+        global lossWeights
         for x, y in loader:
             x = x.to(device = device, dtype = dtype)
             y = y.to(device = device, dtype = torch.long)
             scores = model(x)
+            loss += F.cross_entropy(scores, y, weight = lossWeights)
             _, preds = scores.max(1)
             for t, p in zip(y.view(-1), preds.view(-1)):
                 confusion_matrix[t.long(), p.long()] += 1
@@ -94,7 +99,7 @@ def checkPerformance(loader, model, epoch):
         
         printing = True
         tboard = True
-        supportFunctions.performance(TP, TN, FP, FN, printing, tboard, epoch = epoch, writer = writer)
+        supportFunctions.performance(TP, TN, FP, FN, loss, printing, tboard, train_bool, epoch = epoch, writer = writer)
 ############################
         
 ####### MAIN CODE #######
@@ -108,12 +113,12 @@ isic_data = supportClasses.ISICDataset(csv_file = 'Data/HAM10000_metadata.csv',
 train, val, test = isic_data.loadDataset()
 
 #Model and parameter inits
-learning_rate = 1e-3
-epochs = 1
-model = torchvision.models.resnet50(pretrained = True)
+learning_rate = 1e-6
+epochs = 2
+model = torchvision.models.resnet34(pretrained = True)
 for param in model.parameters():
     #True: train full model, False: transfer learning
-    param.requires_grad = False 
+    param.requires_grad = True 
 """
 model.fc = nn.Sequential(
         nn.Linear(num_ftrs, 1024),
@@ -168,8 +173,8 @@ while continueTraining:
         continueTraining = False
     else:
         iteration += 1
-        optimizer = optim.Adam(model.parameters(), lr = learning_rate/iteration, amsgrad = True)
-        print('Learning rate has been updated from', learning_rate/(iteration-1), 'to', learning_rate/iteration)
+        optimizer = optim.Adam(model.parameters(), lr = learning_rate/1, amsgrad = True)
+        print('Learning rate has been updated from', learning_rate/(2-1), 'to', learning_rate/1)
         print('Do you want to quicksave the model? [y/n]')
         ans = input()
         if ans == 'y':

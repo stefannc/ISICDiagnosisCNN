@@ -99,7 +99,7 @@ class ISICDataset():
         train_dataset = dset.ImageFolder(root = os.path.join(self.root_dir + 'Train/'),
                                          transform = transform)
         
-        self.normalize = False #Edit variable here
+        self.normalize = True #Edit variable here
         if self.normalize:
             #m, s = self.getStatistics(train_dataset) #Uncomment to calculate stats; takes a long time!
             m = self.mu
