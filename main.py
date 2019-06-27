@@ -109,10 +109,11 @@ train, val, test = isic_data.loadDataset()
 
 #Model and parameter inits
 learning_rate = 1e-3
-epochs = 10
+epochs = 1
 model = torchvision.models.resnet50(pretrained = True)
 for param in model.parameters():
-    param.requires_grad = True
+    #True: train full model, False: transfer learning
+    param.requires_grad = False 
 """
 model.fc = nn.Sequential(
         nn.Linear(num_ftrs, 1024),
@@ -159,7 +160,7 @@ continueTraining = True
 iteration = 1
 while continueTraining:
     trainModel(model, optimizer, train, epochs = epochs, start_epoch = start_epoch)
-    checkPerformance(test, model, epochs + start_epoch)
+    #checkPerformance(val, model, epochs + start_epoch)
     
     print(iteration * epochs, 'have ran. Do you want to run another', epochs, 'epochs? [y/n]')
     ans = input()
