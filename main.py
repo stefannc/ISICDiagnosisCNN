@@ -8,6 +8,7 @@ import torchvision
 from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
+import time
 
 import supportFunctions
 import supportClasses
@@ -114,7 +115,7 @@ train, val, test = isic_data.loadDataset()
 
 #Model and parameter inits
 learning_rate = 1e-6
-epochs = 2
+epochs = 5
 model = torchvision.models.resnet34(pretrained = True)
 for param in model.parameters():
     #True: train full model, False: transfer learning
@@ -167,25 +168,20 @@ while continueTraining:
     trainModel(model, optimizer, train, epochs = epochs, start_epoch = start_epoch)
     #checkPerformance(val, model, epochs + start_epoch)
     
-    print(iteration * epochs, 'have ran. Do you want to run another', epochs, 'epochs? [y/n]')
-    ans = input()
-    if ans == 'n':
-        continueTraining = False
-    else:
+    hour = time.localtime().tm_hour
+    print(iteration * epochs, 'have ran. It is currently', hour, 'hour.')
+    if (hour < 10 and hour > 21):
         iteration += 1
-        optimizer = optim.Adam(model.parameters(), lr = learning_rate/1, amsgrad = True)
-        print('Learning rate has been updated from', learning_rate/(2-1), 'to', learning_rate/1)
-        print('Do you want to quicksave the model? [y/n]')
-        ans = input()
-        if ans == 'y':
-            supportFunctions.saveModel(model, optimizer, epochs)
-            print('Model quicksaved succesfully. Returning to training.')
-        else:
-            print('Model will not be quicksaved. Returning to training.')
+        print('It is between 21:00 and 10:00 hr, training will continue for another', epochs, 'epochs.')
+        print('Quicksaving model...')
+        supportFunctions.saveModel(model, optimizer, epochs)
+        print('Model quicksaved succesfully. Returning to training.')
+    else:
+        continueTraining = False
 
 #Saving
 print('Do you want to save this model? [y/n] \n')
-ans = input()
+ans = 'y' #input()
 if ans == 'y':
     supportFunctions.saveModel(model, optimizer, epochs)
     print('Model saved succesfully')
