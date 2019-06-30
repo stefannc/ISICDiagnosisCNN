@@ -18,8 +18,8 @@ import supportClasses
 loss_iter = 0
 USE_GPU = True
 dtype = torch.float32
-lossWeights = [1/262, 1/411, 1/880, 1/92, 1/890, 1/5364, 1/114]
-lossWeights = torch.tensor(np.multiply(5364, lossWeights), dtype = dtype).cuda()
+lossWeights = [1/295, 1/462, 1/990, 1/104, 1/1002, 1/6034, 1/128]
+lossWeights = torch.tensor(np.multiply(6034, lossWeights), dtype = dtype).cuda()
 ############################
 
 ####### MAIN FUNCTIONS DEFINITIONS #######
@@ -51,11 +51,11 @@ def trainModel(model, optimizer, data, epochs=1, start_epoch=1):
             
             scores = model(x)
             loss = F.cross_entropy(scores, y, weight = lossWeights)
-            
+            """
             writer.add_scalar('Cross-Entropy Loss', loss.item(), loss_iter)
             writer.close()
             loss_iter += 1
-
+            """
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -170,7 +170,7 @@ while continueTraining:
     
     hour = time.localtime().tm_hour
     print(iteration * epochs, 'have ran. It is currently', hour, 'hour.')
-    if (hour < 10 and hour > 21):
+    if (hour < 9 or hour > 21):
         iteration += 1
         print('It is between 21:00 and 10:00 hr, training will continue for another', epochs, 'epochs.')
         print('Quicksaving model...')

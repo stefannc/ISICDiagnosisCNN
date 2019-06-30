@@ -17,7 +17,7 @@ device = supportFunctions.getDevice(USE_GPU)
 
 model_filename = 'checkpoint.pth'
 
-model = torchvision.models.resnet50(pretrained = True) #Edit model to match the loaded model!
+model = torchvision.models.resnet34(pretrained = True) #Edit model to match the loaded model!
 num_ftrs = model.fc.in_features
 model.fc = nn.Linear(num_ftrs, 7)
 
@@ -47,7 +47,7 @@ with torch.no_grad():
         x = x.to(device = device, dtype = dtype)
         y = y.to(device = device, dtype = torch.long)
         scores = model(x)
-        output[100 * n : 100 * (n+1)] = scores
+        output[20 * n : 20 * (n+1)] = scores
         n += 1
         _, preds = scores.max(1)
         for t, p in zip(y.view(-1), preds.view(-1)):

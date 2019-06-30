@@ -51,7 +51,10 @@ class ISICDataset():
         Creates the transform tuple
         """
         if self.normalize:
-            t = T.Compose([T.Resize(self.image_size), T.ToTensor(),
+            t = T.Compose([T.Resize(self.image_size), 
+                           T.RandomHorizontalFlip(),
+                           T.RandomVerticalFlip(),
+                           T.ToTensor(),
                            T.Normalize((mu[0], mu[1], mu[2]),(sigma[0], sigma[1], sigma[2]))])
         else:
             t = T.Compose([T.Resize(self.image_size), T.ToTensor()])
