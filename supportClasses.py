@@ -41,7 +41,7 @@ class ISICDataset():
         self.test_size = 200
         self.resize = True
         self.normalize = False #Edit this variable in function loadDataset()
-        self.image_size = [224, 224] #original [600x450]
+        self.image_size = [112, 112] #original [600x450]224
         self.mu = [0.779659, 0.54361504, 0.56447685]
         self.sigma = [0.08348679, 0.11146858, 0.12505478]
         print('ISICDataset Class Successfully Initiated')

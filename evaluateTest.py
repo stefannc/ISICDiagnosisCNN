@@ -43,8 +43,8 @@ with torch.no_grad():
 
     #Creation of output CSV-file
     a = torch.std(output)
-    #output = supportFunctions.sigmoidConversion(output, a = 1/a, threshold = 10)  
-    output = softmax(output)
+    output = supportFunctions.sigmoidConversion(output, a = 1/a, threshold = 0.5)  
+    #output = softmax(output)
     imgnames = []
     
     for i in range(0, 1512):

@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torchvision
+import torchcontrib
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -33,7 +34,7 @@ def initWeights(m):
     elif type(m) == nn.Conv2d:
         torch.nn.init.xavier_normal_(m.weight)
 
-def trainModel(model, optimizer, data, epochs=1, start_epoch=1):
+def trainModel(model, optimizer, data, epochs=1, start_epoch=1, swa = None):
     """
     Training loop. Trains the model, calls checkPerformance() after each epoch.
     """
@@ -59,6 +60,9 @@ def trainModel(model, optimizer, data, epochs=1, start_epoch=1):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+
+        swa.update_swa()
+        swa.swap_swa_sgd()
             
         print('Epoch', e + 1, 'has finished')
         print('Loss:', loss.item())
@@ -116,7 +120,7 @@ train, val, test = isic_data.loadDataset()
 #Model and parameter inits
 learning_rate = 1e-6
 epochs = 5
-model = torchvision.models.resnet34(pretrained = True)
+model = torchvision.models.resnet50(pretrained = True)
 for param in model.parameters():
     #True: train full model, False: transfer learning
     param.requires_grad = True 
@@ -141,6 +145,7 @@ optimizer = optim.SGD(model.fc.parameters(), lr = learning_rate,
                       nesterov = True)
 """
 optimizer = optim.Adam(model.parameters(), lr = learning_rate, amsgrad = True)
+swa_opt = torchcontrib.optim.SWA(optimizer)
 
 load_model = ''
 if load_model == '':
@@ -165,14 +170,14 @@ writer.close()
 continueTraining = True
 iteration = 1
 while continueTraining:
-    trainModel(model, optimizer, train, epochs = epochs, start_epoch = start_epoch)
+    trainModel(model, optimizer, train, epochs = epochs, start_epoch = start_epoch, swa = swa_opt)
     #checkPerformance(val, model, epochs + start_epoch)
     
     hour = time.localtime().tm_hour
     print(iteration * epochs, 'have ran. It is currently', hour, 'hour.')
-    if (hour < 9 or hour > 21):
+    if (hour < 9 or hour >= 21):
         iteration += 1
-        print('It is between 21:00 and 10:00 hr, training will continue for another', epochs, 'epochs.')
+        print('It is between 21:00 and 9:00 hr, training will continue for another', epochs, 'epochs.')
         print('Quicksaving model...')
         supportFunctions.saveModel(model, optimizer, epochs)
         print('Model quicksaved succesfully. Returning to training.')
